@@ -51,7 +51,7 @@ def generate_smoothed_targets(df, lower_quant=0.86, upper_quant=0.95, window=252
     df_local = df_local.dropna(subset=['Target_Smooth_10d'])
     
     # Return ONLY the final target column mapped to the date index
-    return df_local[['Target_Smooth_10d']]
+    return df_local
 
 
 def generate_hmm_targets(df, feature_cols=['Log_Return', 'Vol_EGARCH'], n_components=3):
