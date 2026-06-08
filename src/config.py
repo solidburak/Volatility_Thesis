@@ -1,10 +1,9 @@
 import os
 import logging
 from dotenv import load_dotenv
-from typing import Dict
+from typing import Dict, List
 
 # --- Logging Configuration ---
-# Industry standard: centralized logging setup replaces print() statements
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,7 +27,10 @@ os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
 
 # --- Project Parameters ---
 START_DATE = '2000-01-01'
-TARGET_ETF = 'XLK'
+
+# MULTI-SECTOR PREPARATION: List of targets instead of a single string.
+# We keep it to 1 for now per instructions, but the pipeline handles it as a list.
+TARGET_ETFS: List[str] = ['XLK'] 
 
 # --- Tickers & Macro Data ---
 DAILY_MACRO: Dict[str, str] = {
@@ -44,11 +46,9 @@ MONTHLY_MACRO: Dict[str, str] = {
 }
 
 # --- Macro Reporting Lags (in trading days) ---
-# Configurable lags to prevent look-ahead bias. 
-# You can update these manually based on exact historical publication schedules.
 MACRO_LAGS: Dict[str, int] = {
-    'CPI': 11,           # ~11 trading days into the following month
-    'FedFunds': 1,       # Known immediately, 1 day lag to be safe for market open
-    'Unemployment': 5,   # First Friday of the following month (~5 trading days)
-    'Term_Spread': 1     # Daily series, 1 day lag is safe
+    'CPI': 11,           
+    'FedFunds': 1,       
+    'Unemployment': 5,   
+    'Term_Spread': 1     
 }
