@@ -35,40 +35,50 @@ def generate_macro_surprises(series: pd.Series, window: int = 60) -> pd.Series:
 
 def engineer_stationary_features(raw_df: pd.DataFrame, etf_name: str) -> pd.DataFrame:
     """
-    Transforms raw prices and creates True Macro Surprises dynamically 
-    based on config.py dictionaries.
+    Transforms raw prices and creates True Macro Shocks dynamically.
+    Includes robust column renaming to prevent cache/ticker mismatches.
     """
     logger.info(f"Engineering features and macro surprises for {etf_name}...")
     df = raw_df.copy()
     close_col = f'{etf_name}_Close'
+    
+    # --- 0. Safety Net: Standardize Column Names ---
+    # In case the dataframe has FRED tickers (CPIAUCSL) instead of keys (CPI)
+    monthly_ticker_to_name = {v: k for k, v in config.MONTHLY_MACRO.items()}
+    daily_ticker_to_name = {v: k for k, v in config.DAILY_MACRO.items()}
+    
+    df.rename(columns=monthly_ticker_to_name, inplace=True)
+    df.rename(columns=daily_ticker_to_name, inplace=True)
     
     # --- 1. ETF Math ---
     df['Log_Return'] = np.log(df[close_col] / df[close_col].shift(1))
     df['Sq_Log_Return'] = df['Log_Return'] ** 2
     
     # --- 2. Dynamic Daily Macro Math ---
-    # Automatically calculates percentage changes for anything in DAILY_MACRO
     for name in config.DAILY_MACRO.keys():
         if name in df.columns:
             df[f'{name}_Change'] = df[name].pct_change()
-    
+            
     # --- 3. Dynamic True Macro Shocks ---
-    # Automatically calculates AR(1) surprises and applies exact lags from config
     logger.info("Calculating Autoregressive Macro Surprises...")
     for name in config.MONTHLY_MACRO.keys():
         if name in df.columns:
-            # Default to 1 day lag if a macro variable is missing from MACRO_LAGS
-            lag = config.MACRO_LAGS.get(name, 1) 
-            df[f'{name}_Surprise'] = generate_macro_surprises(df[name]).shift(lag)
-    
+            lag = config.MACRO_LAGS.get(name, 1)
+            
+            # Smart Routing: Rates use simple diffs, Indices use AR(1) surprises
+            if name in ['FedFunds', 'Term_Spread']:
+                df[f'{name}_Diff'] = df[name].diff().shift(lag)
+            else:
+                df[f'{name}_Surprise'] = generate_macro_surprises(df[name]).shift(lag)
+                
     # --- 4. The Purge ---
-    # Dynamically drop all raw input columns to prevent leakage
     columns_to_drop = [close_col] + list(config.DAILY_MACRO.keys()) + list(config.MONTHLY_MACRO.keys())
     cols_to_drop_safe = [col for col in columns_to_drop if col in df.columns]
     
     df = df.drop(columns=cols_to_drop_safe).dropna()
     
     return df
+
 def create_lags(df: pd.DataFrame, feature_cols: List[str], lags: List[int] | None = None) -> pd.DataFrame:
     if lags is None:
         lags = [1, 2, 3, 5]
