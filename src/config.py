@@ -49,7 +49,11 @@ MONTHLY_MACRO: Dict[str, str] = {
     'PPI': 'WPSFD49207',       # Producer Price Index: Finished Goods
     'Housing_Starts': 'HOUST', # New Privately-Owned Housing Units Started
     'Trade_Balance': 'BOPGSTB',# Trade Balance: Goods and Services
-    'M1_Money': 'M1SL'         # M1 Real Money Stock}
+    'M1_Money': 'M1SL',         # M1 Real Money Stock}
+
+    # --- YENİ EKLENENLER ---
+    'NFP': 'PAYEMS',           # Non-Farm Payrolls (Tarım Dışı İstihdam)
+    'Retail_Sales': 'RSAFS'    # Advance Retail Sales
 }
 
 # --- Macro Reporting Lags (in trading days) ---
@@ -64,5 +68,9 @@ MACRO_LAGS: Dict[str, int] = {
     'PPI': 10,             # Usually released 1 day before CPI
     'Housing_Starts': 14,  # Usually released around the 18th-20th of the following month
     'Trade_Balance': 25,   # Usually released in the first week of the *second* month following
-    'M1_Money': 20         # Usually released late in the following month
+    'M1_Money': 20,         # Usually released late in the following month
+
+    # --- YENİ EKLENENLERİN GECİKMELERİ ---
+    'NFP': 5,            # Her ayın ilk Cuması (Yaklaşık 5 iş günü)
+    'Retail_Sales': 10   # Ayın ortasında açıklanır (Yaklaşık 10 iş günü)
 }
